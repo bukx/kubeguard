@@ -1,0 +1,33 @@
+apiVersion: kubeguard.bukx.dev/v1alpha1
+kind: PodGuardPolicy
+metadata:
+  name: production-policy
+  namespace: production
+spec:
+  enforcement: strict
+  rules:
+    requireResourceLimits: true
+    requireProbes: true
+    disallowRoot: true
+    disallowPrivileged: true
+    disallowLatestTag: true
+    maxCPULimit: "2"
+    maxMemoryLimit: "4Gi"
+  exemptServiceAccounts:
+    - system:serviceaccount:kube-system:default
+  exemptImages:
+    - "registry.k8s.io/"
+---
+apiVersion: kubeguard.bukx.dev/v1alpha1
+kind: PodGuardPolicy
+metadata:
+  name: dev-policy
+  namespace: development
+spec:
+  enforcement: permissive
+  rules:
+    requireResourceLimits: false
+    requireProbes: false
+    disallowRoot: true
+    disallowPrivileged: true
+    disallowLatestTag: false

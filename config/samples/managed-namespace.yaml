@@ -1,0 +1,54 @@
+apiVersion: kubeguard.bukx.dev/v1alpha1
+kind: ManagedNamespace
+metadata:
+  name: team-payments
+spec:
+  owner: payments-team@company.com
+  environment: production
+  resourceQuota:
+    hard:
+      cpu: "20"
+      memory: "40Gi"
+      pods: "100"
+  limitRange:
+    defaultLimit:
+      cpu: "500m"
+      memory: "512Mi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "128Mi"
+  networkPolicy:
+    allowIngress: true
+    allowEgress: true
+    allowedNamespaces:
+      - istio-system
+      - monitoring
+  rbac:
+    - role: admin
+      subjects:
+        - kind: Group
+          name: payments-team
+    - role: view
+      subjects:
+        - kind: Group
+          name: platform-team
+  monitoring:
+    enablePrometheus: true
+    alertEmail: payments-team@company.com
+---
+apiVersion: kubeguard.bukx.dev/v1alpha1
+kind: ManagedNamespace
+metadata:
+  name: sandbox-test
+spec:
+  owner: dev@company.com
+  environment: sandbox
+  expiresAt: "2025-12-31T00:00:00Z"
+  resourceQuota:
+    hard:
+      cpu: "4"
+      memory: "8Gi"
+      pods: "20"
+  networkPolicy:
+    allowIngress: true
+    allowEgress: true

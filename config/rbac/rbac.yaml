@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubeguard-controller-manager
+  namespace: kubeguard-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeguard-manager-role
+rules:
+  # CRD access
+  - apiGroups: ["kubeguard.bukx.dev"]
+    resources: ["servicelevelobjectives", "podguardpolicies", "managednamespaces"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["kubeguard.bukx.dev"]
+    resources: ["servicelevelobjectives/status", "podguardpolicies/status", "managednamespaces/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["kubeguard.bukx.dev"]
+    resources: ["servicelevelobjectives/finalizers", "managednamespaces/finalizers"]
+    verbs: ["update"]
+  # Namespace management
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Resource quotas and limit ranges
+  - apiGroups: [""]
+    resources: ["resourcequotas", "limitranges"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Network policies
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # RBAC
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["rolebindings"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # PrometheusRule (for SLO controller)
+  - apiGroups: ["monitoring.coreos.com"]
+    resources: ["prometheusrules"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Events
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  # Pods (for webhook)
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubeguard-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubeguard-manager-role
+subjects:
+  - kind: ServiceAccount
+    name: kubeguard-controller-manager
+    namespace: kubeguard-system

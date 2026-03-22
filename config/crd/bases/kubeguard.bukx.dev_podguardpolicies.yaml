@@ -1,0 +1,113 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: podguardpolicies.kubeguard.bukx.dev
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.15.0
+spec:
+  group: kubeguard.bukx.dev
+  names:
+    kind: PodGuardPolicy
+    listKind: PodGuardPolicyList
+    plural: podguardpolicies
+    singular: podguardpolicy
+    shortNames:
+      - pgp
+      - pgps
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Enforcement
+          type: string
+          jsonPath: .spec.enforcement
+        - name: Evaluated
+          type: integer
+          jsonPath: .status.podsEvaluated
+        - name: Rejected
+          type: integer
+          jsonPath: .status.podsRejected
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: PodGuardPolicy is the Schema for the podguardpolicies API.
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              required:
+                - enforcement
+                - rules
+              properties:
+                enforcement:
+                  type: string
+                  enum: [strict, permissive, audit]
+                  default: strict
+                rules:
+                  type: object
+                  properties:
+                    requireResourceLimits:
+                      type: boolean
+                    requireProbes:
+                      type: boolean
+                    disallowRoot:
+                      type: boolean
+                    disallowPrivileged:
+                      type: boolean
+                    disallowLatestTag:
+                      type: boolean
+                    maxCPULimit:
+                      type: string
+                    maxMemoryLimit:
+                      type: string
+                exemptImages:
+                  type: array
+                  items:
+                    type: string
+                exemptServiceAccounts:
+                  type: array
+                  items:
+                    type: string
+            status:
+              type: object
+              properties:
+                podsEvaluated:
+                  type: integer
+                  format: int64
+                podsRejected:
+                  type: integer
+                  format: int64
+                podsMutated:
+                  type: integer
+                  format: int64
+                lastEvaluated:
+                  type: string
+                  format: date-time
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string

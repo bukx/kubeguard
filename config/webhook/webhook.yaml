@@ -1,0 +1,62 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: kubeguard-validating-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: kubeguard-system/kubeguard-webhook-cert
+webhooks:
+  - name: pod-validator.kubeguard.bukx.dev
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    clientConfig:
+      service:
+        name: kubeguard-webhook-service
+        namespace: kubeguard-system
+        path: /validate-pods
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+    failurePolicy: Fail
+    namespaceSelector:
+      matchExpressions:
+        - key: kubeguard.bukx.dev/enforce
+          operator: In
+          values: ["true"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeguard-webhook-service
+  namespace: kubeguard-system
+spec:
+  ports:
+    - port: 443
+      targetPort: 9443
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: kubeguard
+    app.kubernetes.io/component: controller-manager
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kubeguard-webhook-cert
+  namespace: kubeguard-system
+spec:
+  secretName: kubeguard-webhook-tls
+  issuerRef:
+    name: kubeguard-selfsigned-issuer
+    kind: Issuer
+  dnsNames:
+    - kubeguard-webhook-service.kubeguard-system.svc
+    - kubeguard-webhook-service.kubeguard-system.svc.cluster.local
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: kubeguard-selfsigned-issuer
+  namespace: kubeguard-system
+spec:
+  selfSigned: {}

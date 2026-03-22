@@ -1,0 +1,28 @@
+apiVersion: kubeguard.bukx.dev/v1alpha1
+kind: ServiceLevelObjective
+metadata:
+  name: checkout-availability
+  namespace: production
+spec:
+  service: checkout-api
+  description: "Checkout API must maintain 99.9% availability over 30 days"
+  target: "99.9"
+  window: 30d
+  indicator:
+    type: availability
+    totalQuery: 'sum(rate(http_requests_total{service="checkout-api"}[5m]))'
+    errorQuery: 'sum(rate(http_requests_total{service="checkout-api",code=~"5.."}[5m]))'
+  alerting:
+    burnRateThresholds:
+      - severity: critical
+        shortWindow: 5m
+        longWindow: 1h
+        factor: "14.4"
+      - severity: warning
+        shortWindow: 30m
+        longWindow: 6h
+        factor: "6"
+      - severity: info
+        shortWindow: 6h
+        longWindow: 3d
+        factor: "1"
