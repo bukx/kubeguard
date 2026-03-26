@@ -13,6 +13,10 @@ KubeGuard brings SRE discipline to your cluster as a set of Custom Resource Defi
 
 ## ✨ Features
 
+### 🤖 LLM Ops Ready
+KubeGuard's guardrails map cleanly onto GPU-heavy LLM inference clusters. See [docs/llm-guardrails.md](docs/llm-guardrails.md) for concrete policies and SLO examples.
+
+
 ### 🎯 SLO Controller
 Define Service Level Objectives as Kubernetes resources. KubeGuard monitors them, calculates error budgets in real-time, and auto-generates Prometheus `PrometheusRule` alert rules.
 
