@@ -152,16 +152,25 @@ func allContainers(pod *corev1.Pod) []corev1.Container {
 	var containers []corev1.Container
 	containers = append(containers, pod.Spec.InitContainers...)
 	containers = append(containers, pod.Spec.Containers...)
+	for _, ephemeral := range pod.Spec.EphemeralContainers {
+		containers = append(containers, corev1.Container(ephemeral.EphemeralContainerCommon))
+	}
 	return containers
 }
 
 // isLatestTag checks if an image uses the :latest tag or no tag.
 func isLatestTag(image string) bool {
-	if !strings.Contains(image, ":") {
-		return true // No tag defaults to latest
+	if strings.Contains(image, "@") {
+		return false // Digest-pinned images are already immutable.
 	}
-	parts := strings.Split(image, ":")
-	return parts[len(parts)-1] == "latest"
+
+	lastSlash := strings.LastIndex(image, "/")
+	lastColon := strings.LastIndex(image, ":")
+	if lastColon <= lastSlash {
+		return true // No explicit tag defaults to latest.
+	}
+
+	return image[lastColon+1:] == "latest"
 }
 
 // isExemptImage checks if an image matches any exempt pattern.
